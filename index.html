@@ -864,6 +864,7 @@ function runSearch(q) {
   more();
 }
 function more() {
+  if (!lastRes) return;
   const { out } = lastRes;
   const slice = out.results.slice(shown, shown + 6);
   const html = slice.map(r => {
@@ -908,6 +909,14 @@ $('#results').addEventListener('click', e => {
   fillPage(b.closest('.hit'), +b.dataset.go);
 });
 $('#more').addEventListener('click', more);
+function resetSearch() {
+  lastRes = null; shown = 0;
+  $('#results').innerHTML = ''; $('#more').hidden = true;
+  $('#aiwrap').hidden = true; $('#ai').hidden = true; $('#ai').innerHTML = '';
+  $('#idle').hidden = false;
+}
+$('#q').addEventListener('input', () => { if (!$('#q').value.trim()) resetSearch(); });
+$('#q').addEventListener('search', () => { if (!$('#q').value.trim()) resetSearch(); });
 $('#sform').addEventListener('submit', e => { e.preventDefault(); runSearch($('#q').value); });
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-q]'); if (!b) return;
