@@ -211,10 +211,6 @@ footer a{color:var(--accent)}
       <button class="btn" id="odoSave" type="button">Сохранить</button>
     </div>
     <p class="muted small" id="odoInfo" style="margin:8px 0 0"></p>
-    <div class="grid2" style="margin-top:12px">
-      <label class="f" for="perMonth">Сколько км в месяц вы обычно проезжаете (необязательно)
-        <input type="number" id="perMonth" inputmode="numeric" min="0" step="50" placeholder="например, 1000"></label>
-    </div>
     <p class="muted small" id="pmInfo" style="margin:6px 0 0"></p>
   </div>
 
@@ -410,7 +406,7 @@ footer a{color:var(--accent)}
 <div class="modal" id="bmodal" hidden role="dialog" aria-modal="true" aria-labelledby="bTitle">
   <div class="card">
     <h2 id="bTitle">Резервная копия</h2>
-    <p class="muted small" style="margin:0">Скопируйте текст и сохраните в заметках. Чтобы восстановить данные, вставьте текст сюда и нажмите «Восстановить».</p>
+    <p class="muted small" style="margin:0"><b>Как перенести на другой телефон.</b> 1) На старом телефоне нажмите «Скопировать». 2) Отправьте этот текст себе: в Telegram в «Избранное», в заметки или на почту. 3) На новом телефоне откройте эту же страницу, нажмите «Резервная копия данных», вставьте текст в поле ниже и нажмите «Восстановить». Текст нужно вставлять целиком. Новые данные заменят те, что уже есть на этом телефоне.</p>
     <textarea id="bText" aria-label="Данные"></textarea>
     <div class="acts"><button class="btn ghost" id="bCopy" type="button">Скопировать</button><button class="btn ghost" id="bRestore" type="button">Восстановить</button><button class="btn" id="bClose" type="button">Закрыть</button></div>
     <p class="small" id="bMsg" style="margin:0"></p>
@@ -976,13 +972,12 @@ function remain(c) {
 function renderService() {
   $('#delivery').value = S.delivery || '';
   $('#deliveryKm').value = S.deliveryKm || '';
-  $('#perMonth').value = S.perMonth || '';
   const km = curKm();
   if (document.activeElement !== $('#odoIn')) $('#odoIn').value = km || '';
   const lastOdo = (S.odo || []).reduce((a, b) => (!a || b.d > a.d ? b : a), null);
   $('#odoInfo').textContent = lastOdo ? 'Обновлено ' + E.fmt(E.parseDate(lastOdo.d)) + '. Обновляйте пробег раз в неделю-две, так расчёт точнее.' : 'Введите показание одометра, когда получите автомобиль.';
   const pd = E.perDay(S, today());
-  $('#pmInfo').textContent = pd.src === 'auto' ? 'По вашим записям выходит около ' + fmtKm(pd.v * 30.4) + ' км в месяц, это учитывается в прогнозе дат.' : (pd.src === 'manual' ? 'Это значение используется для прогноза дат.' : 'С этим значением приложение подскажет, когда примерно придёт срок по пробегу.');
+  $('#pmInfo').textContent = pd.src === 'auto' ? 'По вашим записям выходит около ' + fmtKm(pd.v * 30.4) + ' км в месяц, это учитывается в прогнозе дат.' : 'Когда пробег обновится хотя бы за три недели после получения машины, приложение подскажет, когда примерно придёт срок по пробегу.';
 
   const list = E.computeAll(S, today());
   const ready = list.length && list[0].ready;
@@ -1021,7 +1016,6 @@ function renderService() {
 }
 $('#delivery').addEventListener('change', e => { S.delivery = e.target.value; save(); renderService(); });
 $('#deliveryKm').addEventListener('change', e => { S.deliveryKm = Math.max(0, Math.round(+e.target.value || 0)); save(); renderService(); });
-$('#perMonth').addEventListener('change', e => { S.perMonth = e.target.value; save(); renderService(); });
 $('#odoSave').addEventListener('click', () => {
   const v = Math.round(+$('#odoIn').value);
   if (!(v >= 0) || $('#odoIn').value === '') return;
