@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Помощник Qiyuan Q05</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&family=Unbounded:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* Идея: приборная панель. Сверху одна строка поиска, ниже вкладки; цифры пробега в моноширинном «одометре». */
+:root{
+  --bg:#EDF1F3; --surface:#FFFFFF; --ink:#13222C; --muted:#586A75; --line:#D3DBE0;
+  --accent:#0A7C86; --accent-ink:#FFFFFF; --accent-soft:#DCEFF1;
+  --good:#2B7A4B; --warn:#A8620A; --bad:#B3321F;
+  --good-soft:#E1F1E7; --warn-soft:#FBEBD2; --bad-soft:#F8DEDA;
+  --mark:#FFE9A8;
+  --f-display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --f-body:"Golos Text",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D161B; --surface:#152229; --ink:#E6EEF1; --muted:#93A5AF; --line:#27363E;
+    --accent:#3CC1CC; --accent-ink:#05272B; --accent-soft:#173A40;
+    --good:#58C084; --warn:#E3A24F; --bad:#F08272;
+    --good-soft:#173525; --warn-soft:#3A2B14; --bad-soft:#3F1E19;
+    --mark:#5A4A12; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D161B; --surface:#152229; --ink:#E6EEF1; --muted:#93A5AF; --line:#27363E;
+  --accent:#3CC1CC; --accent-ink:#05272B; --accent-soft:#173A40;
+  --good:#58C084; --warn:#E3A24F; --bad:#F08272;
+  --good-soft:#173525; --warn-soft:#3A2B14; --bad-soft:#3F1E19;
+  --mark:#5A4A12; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--f-body);-webkit-text-size-adjust:100%}
+h1,h2,h3{text-wrap:balance;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:6px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.wrap{max-width:820px;margin:0 auto;padding:0 16px}
+
+/* шапка */
+.top{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.top .wrap{display:flex;flex-direction:column;gap:10px;padding-top:12px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{font:600 13px var(--f-display);background:var(--accent);color:var(--accent-ink);padding:7px 9px;border-radius:8px;letter-spacing:.02em}
+.brand b{font:600 15px var(--f-display);display:block;line-height:1.2}
+.brand small{color:var(--muted);font-size:13px}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{white-space:nowrap;text-decoration:none;color:var(--muted);padding:10px 12px;border-bottom:3px solid transparent;font-weight:500;font-size:15px}
+.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+main{padding:18px 0 40px}
+section.tab{display:none;flex-direction:column;gap:16px}
+section.tab.on{display:flex}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.card h2{font:600 16px/1.3 var(--f-display);margin-bottom:10px}
+.card h3{font:600 15px/1.3 var(--f-body);margin-bottom:6px}
+.muted{color:var(--muted)}
+.small{font-size:14px}
+.lead{font:600 22px/1.25 var(--f-display)}
+
+/* поиск */
+.searchbox{display:flex;gap:8px}
+.searchbox input{flex:1;min-width:0;font-size:18px;padding:14px 16px;border-radius:12px;border:2px solid var(--line);background:var(--surface)}
+.searchbox input:focus{border-color:var(--accent);outline:none}
+.btn{border:0;background:var(--accent);color:var(--accent-ink);padding:12px 18px;border-radius:12px;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent);border:2px solid var(--accent)}
+.btn.small{padding:8px 12px;border-radius:10px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:default}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 13px;cursor:pointer;font-size:14px}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.starts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.start{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;cursor:pointer}
+.start:hover{border-color:var(--accent)}
+.start b{display:block;font-weight:600}
+.start span{color:var(--muted);font-size:14px}
+.ai{white-space:pre-wrap;background:var(--accent-soft);border-radius:12px;padding:14px 16px;margin-top:10px}
+.ai small{display:block;margin-top:10px;color:var(--muted)}
+.hit{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.hit header{display:flex;gap:10px;align-items:baseline}
+.pg{font:600 12px var(--f-mono);background:var(--accent-soft);color:var(--accent);padding:3px 8px;border-radius:6px;white-space:nowrap}
+.hit h3{font-size:15px;font-weight:600;margin:0}
+.snip{margin:0}
+mark{background:var(--mark);color:inherit;border-radius:3px;padding:0 2px}
+details summary{cursor:pointer;color:var(--accent);font-weight:500;font-size:15px;padding:4px 0}
+.ptxt p{margin:8px 0}
+.pnav{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+.hits{display:flex;flex-direction:column;gap:12px}
+.empty{padding:18px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
+
+/* обслуживание */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:14px;color:var(--muted)}
+label.f input,label.f select{font-size:16px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.odo{font:600 28px var(--f-mono)!important;letter-spacing:.04em}
+.odo-row{display:flex;gap:8px;align-items:end}
+.odo-row label{flex:1}
+.sum{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.sum .big{font:600 20px/1.3 var(--f-display)}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--good-soft);color:var(--good)}
+.pill.soon{background:var(--warn-soft);color:var(--warn)}
+.pill.over{background:var(--bad-soft);color:var(--bad)}
+.pill.idle{background:var(--accent-soft);color:var(--accent)}
+.items{display:flex;flex-direction:column;gap:10px}
+.item{background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.item.ok{border-left-color:var(--good)} .item.soon{border-left-color:var(--warn)} .item.over{border-left-color:var(--bad)}
+.item .row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.item h3{margin:0;font-size:16px}
+.meta{display:flex;flex-direction:column;gap:2px;font-size:14px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:600}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--good);border-radius:99px}
+.item.soon .bar i{background:var(--warn)} .item.over .bar i{background:var(--bad)}
+.note{font-size:14px;background:var(--warn-soft);color:var(--ink);border-radius:10px;padding:10px 12px}
+.checks{display:flex;flex-direction:column;gap:10px}
+.checks label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.checks input{width:20px;height:20px;margin-top:2px;accent-color:var(--accent);flex:none}
+.log{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:15px}
+.log:last-child{border-bottom:0}
+.linkbtn{background:none;border:0;color:var(--bad);cursor:pointer;font-size:14px;padding:0}
+.insp ul{margin:4px 0 12px;padding-left:20px}
+.insp li{margin:2px 0;font-size:14px}
+.modal{position:fixed;inset:0;background:rgba(5,15,20,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
+.modal[hidden]{display:none}
+.modal .card{width:100%;max-width:420px;display:flex;flex-direction:column;gap:12px}
+.modal .acts{display:flex;gap:8px;justify-content:flex-end}
+textarea{width:100%;min-height:110px;border:1.5px solid var(--line);border-radius:10px;padding:10px;background:var(--surface);font:13px var(--f-mono)}
+
+/* справочник */
+table.t{border-collapse:collapse;width:100%;font-size:14px}
+table.t th,table.t td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+table.t th{color:var(--muted);font-weight:500}
+.tw{overflow-x:auto}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:15px}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:500}
+.big-n{font:600 30px/1 var(--f-mono);color:var(--accent)}
+.steps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.bul{padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.ptools{display:flex;gap:8px;margin:6px 0}
+.ptools .btn.on{background:var(--accent);color:var(--accent-ink)}
+.pbox{width:100%;aspect-ratio:827/1170;background-size:200% 100%;background-repeat:no-repeat;background-color:#fff;border:1px solid var(--line);border-radius:8px}
+.pbad{color:var(--bad)}
+footer{color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:6px;padding-top:6px}
+footer a{color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .4s}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><span class="logo">Q05</span><div><b>Мой Qiyuan Q05</b><small>инструкция, обслуживание, памятки</small></div></div>
+    <nav class="tabs" id="tabs" aria-label="Разделы">
+      <a href="#search">Поиск</a><a href="#service">Обслуживание</a><a href="#charges">Зарядки</a><a href="#winter">Зима</a><a href="#facts">Справочник</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ПОИСК -->
+<section class="tab" id="tab-search">
+  <form id="sform" role="search" class="card" autocomplete="off">
+    <label for="q" class="sr">Вопрос по автомобилю</label>
+    <div class="searchbox">
+      <input id="q" type="search" placeholder="Например: заднее окно, аккумулятор, зарядка" disabled>
+      <button class="btn" type="submit" id="go" disabled>Найти</button>
+    </div>
+    <p class="muted small" id="status" style="margin:10px 0 0">Загружаю инструкцию…</p>
+  </form>
+  <div id="idle" class="card">
+    <h2>С чего начать</h2>
+    <div class="starts" id="starts"></div>
+  </div>
+  <div id="chipsWrap" class="chips" aria-label="Частые темы"></div>
+  <div id="aiwrap" hidden>
+    <button class="btn ghost" id="aibtn" type="button">Объяснить простыми словами</button>
+    <div id="ai" class="ai" hidden aria-live="polite"></div>
+  </div>
+  <div id="results" class="hits"></div>
+  <div><button class="btn ghost" id="more" type="button" hidden>Показать ещё</button></div>
+</section>
+
+<!-- ОБСЛУЖИВАНИЕ -->
+<section class="tab" id="tab-service">
+  <div class="card" id="sumCard">
+    <h2>Ближайшее обслуживание</h2>
+    <div id="sum"></div>
+  </div>
+
+  <div class="card">
+    <h2>Мой автомобиль</h2>
+    <div class="grid2">
+      <label class="f" for="delivery">Дата получения
+        <input type="date" id="delivery"></label>
+      <label class="f" for="deliveryKm">Пробег при получении, км
+        <input type="number" id="deliveryKm" inputmode="numeric" min="0" step="1" placeholder="0"></label>
+    </div>
+    <div class="odo-row" style="margin-top:12px">
+      <label class="f" for="odoIn">Пробег сейчас, км
+        <input type="number" id="odoIn" class="odo" inputmode="numeric" min="0" step="1" placeholder="0"></label>
+      <button class="btn" id="odoSave" type="button">Сохранить</button>
+    </div>
+    <p class="muted small" id="odoInfo" style="margin:8px 0 0"></p>
+    <div class="grid2" style="margin-top:12px">
+      <label class="f" for="perMonth">Сколько км в месяц вы обычно проезжаете (необязательно)
+        <input type="number" id="perMonth" inputmode="numeric" min="0" step="50" placeholder="например, 1000"></label>
+    </div>
+    <p class="muted small" id="pmInfo" style="margin:6px 0 0"></p>
+  </div>
+
+  <div class="items" id="items"></div>
+
+  <div class="card">
+    <h2>Тяжёлые условия эксплуатации</h2>
+    <p class="muted small" style="margin-top:0">Если подходит хотя бы одно, добавляются дополнительные осмотры тормозов, подвески и шасси каждые 3 месяца или 5 000 км.</p>
+    <div class="checks" id="heavy"></div>
+  </div>
+
+  <div class="card">
+    <h2>Что уже сделано</h2>
+    <div id="logs"></div>
+  </div>
+
+  <div class="card insp">
+    <details>
+      <summary>Что входит в базовую проверку</summary>
+      <p class="muted small">Знак ♢ означает, что работа выполняется только в авторизованном сервисном центре.</p>
+      <div id="inspect"></div>
+    </details>
+  </div>
+
+  <div class="card" id="remCard">
+    <h2>Напоминания</h2>
+    <p class="muted small" style="margin-top:0">Страница не умеет присылать уведомления сама. Скачайте файл календаря: в нём событие на каждый срок обслуживания с напоминанием за 14 дней и ежемесячное напоминание проверить шины и записать пробег. Откройте файл на телефоне, и события появятся в календаре. После новой отметки или смены пробега скачайте файл заново.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="icsBtn" type="button">Скачать календарь</button><button class="btn ghost" id="icsCopy" type="button">Скопировать текст календаря</button></div>
+    <p class="small" id="icsMsg" style="margin:8px 0 0"></p>
+  </div>
+
+  <div class="note" id="conflict">
+    <b>Расхождение в документах.</b> Салонный фильтр: в регламенте указано «каждые 12 месяцев или 10 000 км», в инструкции (стр. 450) «каждые 6 месяцев или 10 000 км». Для расчёта взято более частое значение. Уточните у дилера, какое действует для вашей комплектации.
+  </div>
+</section>
+
+<!-- ЗАРЯДКИ -->
+<section class="tab" id="tab-charges">
+  <div class="card">
+    <h2>Расход энергии</h2>
+    <div id="chSum"></div>
+  </div>
+  <form class="card" id="chForm" autocomplete="off">
+    <h2>Новая зарядка</h2>
+    <div class="grid2">
+      <label class="f" for="chDate">Дата <input type="date" id="chDate" required></label>
+      <label class="f" for="chKm">Пробег, км <input type="number" id="chKm" inputmode="numeric" min="0" required></label>
+      <label class="f" for="chKwh">Добавлено, кВт·ч <input type="number" id="chKwh" inputmode="decimal" min="0" step="0.01" required></label>
+      <label class="f" for="chCost">Стоимость (необязательно) <input type="number" id="chCost" inputmode="decimal" min="0" step="0.01"></label>
+      <label class="f" for="chType">Где заряжались
+        <select id="chType"><option value="home">Дома</option><option value="ac">Станция переменного тока</option><option value="dc">Быстрая зарядка</option></select></label>
+      <label class="f" for="chS1">Заряд до, % (необязательно) <input type="number" id="chS1" inputmode="numeric" min="0" max="100"></label>
+      <label class="f" for="chS2">Заряд после, % (необязательно) <input type="number" id="chS2" inputmode="numeric" min="0" max="100"></label>
+    </div>
+    <div><button class="btn" type="submit">Добавить запись</button></div>
+    <p class="muted small" style="margin:0">кВт·ч берите с экрана зарядной станции, из приложения или со счётчика. Расход считается между соседними записями, поэтому всегда записывайте пробег.</p>
+  </form>
+  <div class="card"><h2>Записи</h2><div class="tw"><div id="chList"></div></div></div>
+</section>
+
+<!-- ЗИМА -->
+<section class="tab" id="tab-winter">
+  <div class="card">
+    <h2>Что сказано в инструкции</h2>
+    <ul class="small bul" style="margin:0">
+      <li><b>Запас хода зимой меняется.</b> На него влияют температура, кондиционер, стиль вождения и дорога. Зарядный ток зависит от температуры батареи, поэтому время зарядки тоже меняется (стр. 183).</li>
+      <li><b>Прогрев батареи.</b> Если батарея холодная и заряда достаточно, после разблокировки, включения питания, открытия двери и посадки автоматически включается импульсный нагрев. Он идёт до 15 минут, во время работы слышен звук. Поезжайте после того, как нагрев закончится, на ходу он не работает. В примечании там же сказано, что нужна полная зарядка батареи, поэтому точное условие включения уточните у дилера (стр. 232).</li>
+      <li><b>Зарядка на улице.</b> В дождь и снег её лучше избегать: в дренажном отверстии порта может образоваться лёд, и пистолет будет трудно вставить и вынуть (стр. 224).</li>
+      <li><b>Дворники.</b> Перед включением очистите стекло и щётки от льда и снега (стр. 417).</li>
+      <li><b>Замёрзшая ручка или уплотнители дверей.</b> Не тяните ручку с силой, разморозьте её тёплой водой. В дождь и снег протирайте уплотнители чистой тканью (стр. 442).</li>
+      <li><b>Шины.</b> На обледенелых и заснеженных дорогах рекомендуют зимние шины или цепи противоскольжения. Всесезонные шины M+S слабее зимних. Зимние шины нужно ставить на все четыре колеса, иначе можно потерять управляемость. С цепями противоскольжения скорость не больше 30 км/ч для металлических и 50 км/ч для неметаллических цепей, а если производитель цепей указал меньше, то меньше (стр. 431–432). С зимними шинами или цепями датчик давления может ложно сработать (стр. 434).</li>
+      <li><b>Соль и реагенты.</b> После поездки по посыпанным дорогам автомобиль сразу мойте, но не в плохо проветриваемом гараже (стр. 444).</li>
+      <li><b>Обогрев и разморозка.</b> В климате есть предварительная разморозка, обогрев лобового стекла и подогрев зеркал с задним стеклом. «Режим энергосбережения» снижает расход (стр. 71).</li>
+      <li><b>Запотевшие фары на морозе</b> это нормально (стр. 423).</li>
+      <li><b>Долгая стоянка.</b> Оставляйте около 50% заряда и подзаряжайте, если стоите дольше трёх месяцев (стр. 183).</li>
+    </ul>
+    <p style="margin:12px 0 0;display:flex;gap:8px;flex-wrap:wrap"><button class="chip" data-q="импульсный нагрев батареи">Прогрев батареи</button><button class="chip" data-q="зимние шины цепи противоскольжения">Зимние шины</button><button class="chip" data-q="обогрев лобового стекла разморозка">Разморозка</button></p>
+  </div>
+  <div class="card">
+    <h2>Общие советы по электромобилю</h2>
+    <p class="muted small" style="margin-top:0">Это общие рекомендации для электромобилей, в инструкции Q05 их нет. Детали для вашей модели уточните у дилера.</p>
+    <ul class="small bul" style="margin:0">
+      <li>На морозе запас хода обычно заметно меньше паспортного. Планируйте поездки с запасом заряда, особенно за город.</li>
+      <li>Салон выгоднее прогревать, пока автомобиль подключён к зарядке: тогда энергия идёт из сети, а не из батареи.</li>
+      <li>Подогрев сидений и руля обычно расходует меньше, чем обогрев всего салона.</li>
+      <li>Давление в шинах на холоде падает, примерно на 10–12 кПа на каждые 10 градусов. Проверяйте его по холодным шинам, норма 280 кПа.</li>
+      <li>Не оставляйте автомобиль на сильном морозе с очень низким зарядом.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h2>Перед зимним сезоном</h2>
+    <div class="checks" id="wList"></div>
+  </div>
+</section>
+
+<!-- СПРАВОЧНИК -->
+<section class="tab" id="tab-facts">
+  <div class="card">
+    <h2>Шины</h2>
+    <div class="grid2">
+      <div><div class="big-n">280 кПа</div><div class="muted small">2,8 бар, холодные шины, любая загрузка</div></div>
+      <div><div class="big-n">250 кПа</div><div class="muted small">«комфортное» давление</div></div>
+    </div>
+    <ul class="small" style="margin:12px 0 0;padding-left:20px">
+      <li>Размеры: 225/60 R17 и 225/55 R18.</li>
+      <li>Проверять давление и износ протектора раз в месяц.</li>
+      <li>Разница между левой и правой шиной не больше 5 кПа.</li>
+      <li>Шину старше 6 лет меняют, даже если она выглядит целой.</li>
+    </ul>
+    <p style="margin:10px 0 0"><button class="chip" data-q="давление в шинах">Найти в инструкции (стр. 426–427)</button></p>
+  </div>
+
+  <div class="card">
+    <h2>Зарядка</h2>
+    <ol class="steps small">
+      <li>Лючок зарядного порта находится слева спереди. Нажмите на него, он приподнимется (стр. 222).</li>
+      <li>Заряжать можно с выключенным автомобилем или в режиме P с включённым электронным стояночным тормозом (стр. 223).</li>
+      <li>Откройте пылезащитную крышку нужного разъёма, вставьте пистолет. Медленная зарядка идёт от сети переменного тока, быстрая от станций постоянного тока.</li>
+      <li>Перед зарядкой убедитесь, что порт сухой и в нём нет посторонних предметов. После зарядки закройте пылезащитную крышку (стр. 224).</li>
+      <li>Чтобы поехать, сначала разблокируйте автомобиль и отсоедините пистолет.</li>
+      <li>Ток медленной зарядки можно ограничить: 8 А для розетки на 10 А, 13 А для розетки на 16 А (стр. 227). Плановую зарядку включают в разделе «Энергия» (стр. 225).</li>
+    </ol>
+    <p style="margin:10px 0 0;display:flex;gap:8px;flex-wrap:wrap"><button class="chip" data-q="зарядка">Вся глава про зарядку</button><button class="chip" data-q="не заряжается">Не заряжается</button></p>
+  </div>
+
+  <div class="card">
+    <h2>Жидкости и объёмы</h2>
+    <div class="tw"><table class="t">
+      <tr><th>Что</th><th>Спецификация</th><th>405 км</th><th>506 км</th></tr>
+      <tr><td>Масло редуктора</td><td>CA-DHTF-1</td><td colspan="2">0,75 ± 0,05 л</td></tr>
+      <tr><td>Охлаждающая жидкость</td><td>BASF G30 или Sinopec LEC-II-40</td><td>2,75 ± 0,2 л</td><td>7,5 ± 0,2 л</td></tr>
+      <tr><td>Масло кондиционера</td><td>PVE</td><td colspan="2">190 г</td></tr>
+      <tr><td>Хладагент</td><td>R-134a</td><td>780 ± 20 г</td><td>450 ± 20 г</td></tr>
+      <tr><td>Омывающая жидкость</td><td>RLQ-6320</td><td colspan="2">около 1,2 л</td></tr>
+      <tr><td>Тормозная жидкость</td><td>HZY4 DOT4</td><td colspan="2">850 ± 80 мл</td></tr>
+    </table></div>
+    <p class="muted small" style="margin:8px 0 0">Колонки «405» и «506» соответствуют моделям SC6440AAAABEV и SC6440AAABBEV. Жидкости меняет сервис, самой заливать ничего не нужно.</p>
+  </div>
+
+  <div class="card">
+    <h2>Автомобиль в цифрах</h2>
+    <div class="tw"><table class="t">
+      <tr><th></th><th>405</th><th>506</th></tr>
+      <tr><td>Запас хода по циклу CLTC</td><td>405 км</td><td>506 км</td></tr>
+      <tr><td>Расход по CLTC</td><td>11,3 кВт·ч/100 км</td><td>11,7 кВт·ч/100 км</td></tr>
+      <tr><td>Батарея (литий-железо-фосфат)</td><td>40,29 кВт·ч</td><td>51,91 кВт·ч</td></tr>
+      <tr><td>Охлаждение батареи</td><td>прямое</td><td>жидкостное</td></tr>
+      <tr><td>Масса батареи</td><td>315 кг</td><td>381 кг</td></tr>
+    </table></div>
+    <dl class="kv" style="margin:12px 0 0">
+      <dt>Максимальная скорость</dt><dd>160 км/ч</dd>
+      <dt>Дорожный просвет</dt><dd>170 мм (без нагрузки)</dd>
+      <dt>Радиус разворота</dt><dd>10,6 м</dd>
+      <dt>Багажник</dt><dd>380–1380 л</dd>
+      <dt>Привод</dt><dd>передний</dd>
+    </dl>
+    <p class="muted small" style="margin:8px 0 0">Реальный запас хода зависит от стиля вождения, дороги и погоды (стр. 183, 485), зимой он обычно ниже.</p>
+  </div>
+
+  <div class="card">
+    <h2>Если что-то случилось</h2>
+    <p class="muted small" style="margin-top:0">Глава «Чрезвычайная ситуация» (стр. 453–474). Возгорание, затопление и повреждение высоковольтных элементов не устраняют самостоятельно.</p>
+    <div class="chips">
+      <button class="chip" data-q="аварийная сигнализация">Аварийка</button>
+      <button class="chip" data-q="механический ключ аварийное открывание">Не открывается</button>
+      <button class="chip" data-q="эвакуация буксировка">Эвакуация</button>
+      <button class="chip" data-q="высоковольтный поражение электрическим током">Высокое напряжение</button>
+      <button class="chip" data-q="возгорание">Возгорание</button>
+      <button class="chip" data-q="затопление наводнение">Затопление</button>
+      <button class="chip" data-q="инструменты автомобиля">Инструменты</button>
+      <button class="chip" data-q="блок предохранителей">Предохранители</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span id="store"></span>
+  <span><button class="chip" id="backupBtn" type="button">Резервная копия данных</button></span>
+  <span>Инструкция и регламент переведены с китайского машинным переводом, термины бывают неточными (например, «метр» означает приборную панель). Важное сверяйте с сервисом. <a href="http://sim.changan.com.cn:9000/um/manual/CAOM795551/?#/CAOM795551" target="_blank" rel="noopener">Официальная инструкция онлайн</a>.</span>
+</footer>
+</main>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <form class="card" id="mform">
+    <h2 id="mTitle">Отметить выполненным</h2>
+    <p class="muted small" id="mItem" style="margin:0"></p>
+    <label class="f" for="mDate">Дата <input type="date" id="mDate" required></label>
+    <label class="f" for="mKm">Пробег, км <input type="number" id="mKm" inputmode="numeric" min="0" required></label>
+    <div class="acts"><button type="button" class="btn ghost" id="mCancel">Отмена</button><button type="submit" class="btn">Сохранить</button></div>
+  </form>
+</div>
+
+<div class="modal" id="bmodal" hidden role="dialog" aria-modal="true" aria-labelledby="bTitle">
+  <div class="card">
+    <h2 id="bTitle">Резервная копия</h2>
+    <p class="muted small" style="margin:0">Скопируйте текст и сохраните в заметках. Чтобы восстановить данные, вставьте текст сюда и нажмите «Восстановить».</p>
+    <textarea id="bText" aria-label="Данные"></textarea>
+    <div class="acts"><button class="btn ghost" id="bCopy" type="button">Скопировать</button><button class="btn ghost" id="bRestore" type="button">Восстановить</button><button class="btn" id="bClose" type="button">Закрыть</button></div>
+    <p class="small" id="bMsg" style="margin:0"></p>
+  </div>
+</div>
+
+<script>
+/* Q05 helper engine: Russian search over the manual + maintenance maths. Pure functions, no DOM. */
+(function (root) {
+  'use strict';
+
+  /* ---------- search ---------- */
+  const STOP = new Set('как что где когда можно мне мой моя мои это для при или и в во на с со по к у о об от из ли не чтобы нужно надо почему какой какая какое какие если ли же бы да нет есть быть можно нужен нужна хочу хотела где-то там тут чем кто сделать делать'.split(' '));
+
+  // Verbs that appear on nearly every page: they count only a little.
+  const WEAK = new Set('открыть закрыть включить выключить заменить проверить настроить использовать пользоваться работает работать сделать найти поменять установить'.split(' '));
+  // One-way expansions: what a person says -> what the manual says.
+  const SYN_ONE = {
+    'багажник': ['двер', 'электрическая', 'задняя', 'багажное'],
+    'рекуперация': ['торможение', 'торможения', 'энергии', 'накатом', 'режим'],
+    'одной': ['hold', 'удержание'],
+    'подсветка': ['освещение', 'свет'],
+    'музыка': ['мультимедиа', 'динамик', 'громкость', 'радио'],
+    'громкость': ['звук', 'мультимедиа', 'динамики'],
+    'ремонт': ['сервис', 'обслуживание', 'неисправность'],
+    'ошибка': ['неисправность', 'индикатор', 'предупреждающая'],
+    'не': [],
+  };
+
+  // Groups of words that mean the same thing for a car owner, mapped to the (machine-translated) wording of the manual.
+  const SYN_GROUPS = [
+    ['аккумулятор', 'аккумуляторная', 'батарея', 'низковольтный', '12в', 'питания'],
+    ['тяговая', 'батарея', 'аккумуляторный', 'высоковольтный', 'заряд'],
+    ['окно', 'окна', 'окон', 'окне', 'стекло', 'стекла', 'стеклоподъемник', 'стеклоподъемники', 'форточка'],
+    ['багажник', 'багажника', 'багажное', 'багажного', 'хвост'],
+    ['капот', 'капота', 'передний', 'моторный', 'подкапотное'],
+    ['зарядка', 'зарядки', 'зарядить', 'заряжать', 'зарядный', 'зарядное', 'зарядного', 'зарядить', 'розетка', 'кабель', 'пистолет', 'wallbox', 'вольтбокс'],
+    ['быстрая', 'dc', 'постоянного'],
+    ['медленная', 'ac', 'переменного', 'домашняя', 'домашней'],
+    ['шины', 'шина', 'колесо', 'колеса', 'резина', 'покрышки', 'покрышка', 'давление'],
+    ['дворники', 'дворник', 'щетки', 'щетка', 'стеклоочистители', 'стеклоочиститель'],
+    ['омывайка', 'омыватель', 'омывателя', 'незамерзайка', 'стеклоомыватель'],
+    ['кондиционер', 'кондиционирование', 'климат', 'печка', 'отопление', 'обогрев', 'охлаждение', 'тепло', 'холод'],
+    ['ключ', 'брелок', 'смарт-ключ', 'пульт', 'ключи'],
+    ['ручник', 'стояночный', 'стояночного', 'epb', 'парковочный'],
+    ['парковка', 'парковки', 'припарковаться', 'радар', 'парктроник', 'панорамное', 'камера', 'камеры'],
+    ['запас', 'дальность', 'пробег', 'запаса', 'хода'],
+    ['зеркала', 'зеркало', 'наружное'],
+    ['подогрев', 'обогрев', 'подогрева', 'обогрева', 'сиденья', 'сидений', 'руль', 'руля'],
+    ['люк', 'крыша', 'панорамная', 'шторка', 'солнцезащитный', 'солнцезащитная'],
+    ['детское', 'кресло', 'isofix', 'удерживающие', 'ребенок', 'ребенка', 'детей'],
+    ['буксировка', 'буксир', 'эвакуация', 'эвакуатор', 'трос', 'буксировать'],
+    ['предохранитель', 'предохранители', 'предохранителей', 'блок'],
+    ['домкрат', 'инструменты', 'инструмент', 'запасное', 'ремкомплект', 'подъем'],
+    ['рекуперация', 'рекуперативное', 'накатом', 'торможение', 'тормоз', 'тормоза', 'торможения'],
+    ['аварийка', 'аварийная', 'аварийный', 'сигнализация', 'сигнализации'],
+    ['телефон', 'приложение', 'смартфон', 'bluetooth', 'мобильный', 'мобильного', 'qiyuan', 'app'],
+    ['свет', 'фары', 'фара', 'освещение', 'лампа', 'лампы', 'габариты'],
+    ['экран', 'дисплей', 'центральный', 'мультимедиа', 'информационно-развлекательный'],
+    ['неисправность', 'ошибка', 'горит', 'индикатор', 'индикаторная', 'предупреждающая', 'лампа', 'лампочка', 'значок'],
+    ['сиденье', 'сиденья', 'кресло', 'места', 'сидения', 'подголовник'],
+    ['ремень', 'ремни', 'пристегнуть', 'безопасности'],
+    ['подушки', 'подушка', 'airbag', 'srs'],
+    ['руль', 'рулевое', 'рулевого', 'колесо', 'рулевой'],
+    ['скорость', 'круиз', 'круиз-контроль', 'ограничитель', 'acc'],
+    ['режим', 'режимы', 'эко', 'спорт', 'комфорт', 'вождения'],
+    ['мойка', 'мыть', 'мойки', 'очистка', 'чистка', 'уход', 'кузов'],
+    ['гарантия', 'сервис', 'обслуживание', 'то', 'техобслуживание'],
+  ];
+
+  const SUFFIXES = (
+    'ировать ирован ование ования ованию ением ения ению ений ости ость остью ившись ывшись ающий ающая ающее ающие ующий ующая ующее ующие ировка ировки ировку ировкой ировке ' +
+    'ами ями ого его ому ему ыми ими иях ях ах ов ев ей ий ый ой ая яя ую юю ое ее ие ые ом ем ам ям ою ею ию ье ья ью ия ии ют ут ят ат ет ит ешь ишь ете ите ем им ла ли ло ть ся сь ны но на ен ён ан ян ым ом ' +
+    'ы и а я о е у ю ь й'
+  ).split(' ').filter((v, i, a) => a.indexOf(v) === i).sort((a, b) => b.length - a.length);
+
+  function norm(s) { return String(s).toLowerCase().replace(/ё/g, 'е'); }
+  function tokenize(s) { return norm(s).match(/[a-zа-я0-9]+(?:-[a-zа-я0-9]+)*/g) || []; }
+  function stem(w) {
+    w = norm(w);
+    if (w.length <= 3) return w;
+    if (w.length > 5 && /(ся|сь)$/.test(w)) w = w.slice(0, -2);
+    for (const sfx of SUFFIXES) {
+      if (w.length - sfx.length >= 3 && w.endsWith(sfx)) return w.slice(0, w.length - sfx.length);
+    }
+    return w;
+  }
+
+  const SYN_MAP = new Map();
+  SYN_GROUPS.forEach((g, gi) => {
+    g.forEach(w => {
+      const s = stem(w);
+      if (!SYN_MAP.has(s)) SYN_MAP.set(s, new Set());
+      SYN_MAP.get(s).add(gi);
+    });
+  });
+
+  function buildIndex(pages) {
+    const docs = [];
+    const post = new Map();
+    let total = 0;
+    pages.forEach((pg, idx) => {
+      const toks = tokenize(pg.t);
+      const firstLine = pg.t.split('\n')[0].slice(0, 90);
+      const titleToks = tokenize(firstLine);
+      const tf = new Map();
+      toks.forEach(w => { const s = stem(w); tf.set(s, (tf.get(s) || 0) + 1); });
+      titleToks.forEach(w => { const s = stem(w); tf.set(s, (tf.get(s) || 0) + 2); });
+      const len = toks.length + titleToks.length * 2;
+      total += len;
+      docs.push({ idx, len });
+      tf.forEach((c, s) => { if (!post.has(s)) post.set(s, []); post.get(s).push([idx, c]); });
+    });
+    return { pages, docs, post, vocab: Array.from(post.keys()), avg: total / Math.max(1, docs.length), N: docs.length };
+  }
+
+  function expandQuery(q) {
+    const toks = tokenize(q).filter(w => !STOP.has(w));
+    const base = toks.length ? toks : tokenize(q);
+    const terms = [];
+    const seen = new Set();
+    base.forEach(w => {
+      const s = stem(w);
+      if (seen.has(s)) return;
+      seen.add(s);
+      const syn = new Set();
+      (SYN_MAP.get(s) || []).forEach(gi => SYN_GROUPS[gi].forEach(x => { const sx = stem(x); if (sx !== s) syn.add(sx); }));
+      (SYN_ONE[w] || []).forEach(x => { const sx = stem(x); if (sx !== s) syn.add(sx); });
+      const weak = WEAK.has(w);
+      if (weak) syn.clear();
+      terms.push({ stem: s, word: w, syn: Array.from(syn), tw: weak ? 0.3 : 1 });
+    });
+    return terms;
+  }
+
+  function matchVocab(index, stemStr, allowPrefix) {
+    const out = [];
+    if (index.post.has(stemStr)) out.push([stemStr, 1]);
+    if (allowPrefix && stemStr.length >= 4) {
+      for (const v of index.vocab) if (v !== stemStr && v.startsWith(stemStr)) out.push([v, 0.75]);
+    }
+    return out;
+  }
+
+  const K1 = 1.4, B = 0.6;
+  function bm25(index, tf, df, len) {
+    const idf = Math.log(1 + (index.N - df + 0.5) / (df + 0.5));
+    return idf * (tf * (K1 + 1)) / (tf + K1 * (1 - B + B * len / index.avg));
+  }
+
+  function search(index, q, limit) {
+    const terms = expandQuery(q);
+    if (!terms.length) return { results: [], terms, hl: [] };
+    const per = new Map(); // page -> {score, matched}
+    const hl = [];
+    terms.forEach((t, ti) => {
+      const own = new Map(), syn = new Map();
+      matchVocab(index, t.stem, true).forEach(([v, w]) => {
+        hl.push({ stem: v, prefix: false });
+        const pl = index.post.get(v);
+        pl.forEach(([di, tf]) => own.set(di, (own.get(di) || 0) + w * bm25(index, tf, pl.length, index.docs[di].len)));
+      });
+      t.syn.forEach(sx => {
+        matchVocab(index, sx, false).forEach(([v, w]) => {
+          hl.push({ stem: v, prefix: false, syn: true });
+          const pl = index.post.get(v);
+          pl.forEach(([di, tf]) => syn.set(di, (syn.get(di) || 0) + 0.55 * w * bm25(index, tf, pl.length, index.docs[di].len)));
+        });
+      });
+      const all = new Set([...own.keys(), ...syn.keys()]);
+      all.forEach(di => {
+        const a = own.get(di) || 0, b = syn.get(di) || 0;
+        const s = Math.max(a, b) + 0.25 * Math.min(a, b);
+        const r = per.get(di) || { score: 0, matched: 0, ownMatched: 0 };
+        r.score += s * t.tw; r.matched += t.tw; if (a > 0) r.ownMatched += t.tw;
+        per.set(di, r);
+      });
+    });
+    const n = terms.reduce((a, t) => a + t.tw, 0);
+    const res = [];
+    per.forEach((r, di) => {
+      const cov = 0.35 + 0.65 * (r.matched / n);
+      const ownBonus = 1 + 0.25 * (r.ownMatched / n);
+      res.push({ idx: di, p: index.pages[di].p, score: r.score * cov * ownBonus });
+    });
+    res.sort((x, y) => y.score - x.score);
+    return { results: res.slice(0, limit || 30), terms, hl };
+  }
+
+  function matcherFor(hl) {
+    const exact = new Set(hl.map(h => h.stem));
+    return w => exact.has(stem(w));
+  }
+
+  // Pick the best ~window of text and return {text, ranges}
+  function snippet(text, hl, maxLen) {
+    maxLen = maxLen || 300;
+    const isHit = matcherFor(hl);
+    const re = /[A-Za-zА-Яа-яЁё0-9]+(?:-[A-Za-zА-Яа-яЁё0-9]+)*/g;
+    const toks = []; let m;
+    while ((m = re.exec(text))) toks.push({ s: m.index, e: m.index + m[0].length, hit: isHit(m[0]) });
+    if (!toks.length) return text.slice(0, maxLen);
+    let best = 0, bestScore = -1;
+    for (let i = 0; i < toks.length; i++) {
+      let sc = 0;
+      for (let j = i; j < toks.length && toks[j].e - toks[i].s <= maxLen; j++) if (toks[j].hit) sc++;
+      if (sc > bestScore) { bestScore = sc; best = i; }
+    }
+    let start = toks[Math.max(0, best - (bestScore > 0 ? 3 : 0))].s;
+    if (bestScore <= 0) start = 0;
+    let end = Math.min(text.length, start + maxLen);
+    const sp = text.lastIndexOf(' ', end);
+    if (end < text.length && sp > start + maxLen * 0.6) end = sp;
+    return (start > 0 ? '… ' : '') + text.slice(start, end).trim() + (end < text.length ? ' …' : '');
+  }
+
+  function highlightHTML(text, hl, esc) {
+    const isHit = matcherFor(hl);
+    const re = /[A-Za-zА-Яа-яЁё0-9]+(?:-[A-Za-zА-Яа-яЁё0-9]+)*/g;
+    let out = '', last = 0, m;
+    while ((m = re.exec(text))) {
+      out += esc(text.slice(last, m.index));
+      out += isHit(m[0]) ? '<mark>' + esc(m[0]) + '</mark>' : esc(m[0]);
+      last = m.index + m[0].length;
+    }
+    return out + esc(text.slice(last));
+  }
+
+  /* ---------- maintenance ---------- */
+  const COND = {
+    A: 'Частые короткие поездки',
+    B: 'Неровные и грязные дороги',
+    C: 'Пыльные дороги',
+    D: 'Сильный мороз или дороги с большим количеством соли и реагентов',
+    E: 'Сильный мороз и частые короткие поездки',
+    F: 'Бездорожье',
+  };
+
+  const ITEMS = [
+    { id: 'basic', group: 'regular', name: 'Базовая проверка автомобиля', method: 'I', dealer: true,
+      interval: (done) => done ? { m: 12, km: 10000 } : { m: 12, km: 5000 },
+      first: { m: 12, km: 5000 }, then: { m: 12, km: 10000 },
+      why: 'Мастер осматривает тормозную систему, шины и колёса, крепёж, высоковольтную систему, охлаждение, кондиционер, свет и дворники. Первая проверка раньше остальных: через 12 месяцев или 5 000 км, дальше раз в 12 месяцев или 10 000 км.' },
+    { id: 'cabin', group: 'regular', name: 'Салонный фильтр кондиционера', method: 'R', dealer: true,
+      interval: () => ({ m: 6, km: 10000 }),
+      why: 'Очищает воздух, который идёт в салон. В регламенте стоит 12 месяцев, в инструкции к автомобилю 6 месяцев. Здесь взят более частый срок, его можно изменить после уточнения в сервисе.' },
+    { id: 'brakefluid', group: 'regular', name: 'Тормозная жидкость', method: 'R', dealer: true,
+      interval: () => ({ m: 24, km: 40000 }),
+      why: 'Жидкость в тормозной системе со временем впитывает влагу, поэтому её меняют по сроку, даже если проехали мало.' },
+    { id: 'coolant', group: 'regular', name: 'Охлаждающая жидкость', method: 'R', dealer: true,
+      interval: () => ({ m: 36, km: 80000 }),
+      why: 'Охлаждающая жидкость системы электропривода. Проверку шлангов и соединений делают при каждой базовой проверке.' },
+    { id: 'gearoil', group: 'regular', name: 'Масло редуктора привода', method: 'R', dealer: true,
+      interval: () => ({ m: 36, km: 60000 }),
+      why: 'Смазка в редукторе, который передаёт вращение мотора на колёса. Спецификация CA-DHTF-1, около 0,75 л.' },
+    { id: 'h_shaft', group: 'heavy', name: 'Приводной вал и защита', method: 'I', conds: ['B', 'C', 'D', 'E'], dealer: true, interval: () => ({ m: 3, km: 5000 }), why: 'Осмотр при тяжёлых условиях эксплуатации.' },
+    { id: 'h_chassis', group: 'heavy', name: 'Элементы шасси', method: 'I', conds: ['A', 'B', 'D', 'E'], dealer: true, interval: () => ({ m: 3, km: 5000 }), why: 'Осмотр болтов и гаек шасси при тяжёлых условиях эксплуатации.' },
+    { id: 'h_brakes', group: 'heavy', name: 'Тормозная система', method: 'I', conds: ['A', 'B', 'C', 'D', 'E'], dealer: true, interval: () => ({ m: 3, km: 5000 }), why: 'Осмотр дисков и колодок при тяжёлых условиях эксплуатации.' },
+    { id: 'h_susp', group: 'heavy', name: 'Элементы подвески', method: 'I', conds: ['B', 'C', 'D'], dealer: true, interval: () => ({ m: 3, km: 5000 }), why: 'Осмотр подвески и рулевых наконечников при тяжёлых условиях эксплуатации.' },
+    { id: 'h_park', group: 'heavy', name: 'Стояночный тормоз', method: 'I', conds: ['A', 'B', 'C', 'D', 'E'], dealer: true, interval: () => ({ m: 3, km: 5000 }), why: 'Осмотр при тяжёлых условиях эксплуатации.' },
+  ];
+
+  function parseDate(s) { if (!s) return null; const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); }
+  function iso(d) { const z = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()); }
+  function addMonths(d, m) { const x = new Date(d.getFullYear(), d.getMonth() + m, d.getDate()); if (x.getDate() !== d.getDate()) x.setDate(0); return x; }
+  function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+  function days(a, b) { return Math.round((b - a) / 864e5); }
+  function fmt(d) { const z = n => String(n).padStart(2, '0'); return z(d.getDate()) + '.' + z(d.getMonth() + 1) + '.' + d.getFullYear(); }
+
+  function lastLog(logs, id) {
+    let best = null;
+    (logs || []).forEach(l => { if (l.item === id && (!best || l.d > best.d || (l.d === best.d && l.km > best.km))) best = l; });
+    return best;
+  }
+  function currentKm(S) {
+    let km = S.deliveryKm || 0;
+    (S.odo || []).forEach(o => { if (o.km > km) km = o.km; });
+    return km;
+  }
+  function perDay(S, today) {
+    const pm = Number(S.perMonth);
+    if (pm > 0) return { v: pm / 30.4, src: 'manual' };
+    const dd = parseDate(S.delivery);
+    if (!dd || !(S.odo || []).length) return { v: 0, src: 'none' };
+    const last = S.odo.reduce((a, b) => (b.d > a.d ? b : a));
+    const span = days(dd, parseDate(last.d));
+    const dk = last.km - (S.deliveryKm || 0);
+    if (span >= 21 && dk > 0) return { v: dk / span, src: 'auto' };
+    return { v: 0, src: 'none' };
+  }
+
+  function computeItem(item, S, today) {
+    const done = lastLog(S.logs, item.id);
+    const iv = item.interval(!!done);
+    const del = parseDate(S.delivery);
+    const base = done ? { d: parseDate(done.d), km: done.km } : (del ? { d: del, km: S.deliveryKm || 0 } : null);
+    const out = { item, iv, done, base, ready: !!base };
+    if (!base) return out;
+    const km = currentKm(S);
+    const dueDate = addMonths(base.d, iv.m);
+    const dueKm = base.km + iv.km;
+    const pd = perDay(S, today);
+    const kmLeft = dueKm - km;
+    const dayLeft = days(today, dueDate);
+    let projected = null;
+    if (pd.v > 0 && kmLeft > 0) projected = addDays(today, Math.round(kmLeft / pd.v));
+    let nextDate = dueDate, byKm = false;
+    if (projected && projected < dueDate) { nextDate = projected; byKm = true; }
+    const totalDays = Math.max(1, days(base.d, dueDate));
+    const frac = Math.max(0, Math.min(1.2, Math.max(days(base.d, today) / totalDays, (km - base.km) / iv.km)));
+    const soonKm = Math.min(1000, iv.km * 0.1);
+    let status = 'ok';
+    if (dayLeft < 0 || kmLeft <= 0) status = 'over';
+    else if (dayLeft <= 30 || kmLeft <= soonKm) status = 'soon';
+    Object.assign(out, { dueDate, dueKm, kmLeft, dayLeft, projected, nextDate, byKm, frac, status, km, pd });
+    return out;
+  }
+
+  function activeItems(S) {
+    const heavy = S.heavy || {};
+    return ITEMS.filter(it => it.group === 'regular' || it.conds.some(c => heavy[c]));
+  }
+  function computeAll(S, today) {
+    const list = activeItems(S).map(it => computeItem(it, S, today));
+    const rank = { over: 0, soon: 1, ok: 2 };
+    list.sort((a, b) => {
+      if (a.ready !== b.ready) return a.ready ? -1 : 1;
+      if (!a.ready) return 0;
+      if (rank[a.status] !== rank[b.status]) return rank[a.status] - rank[b.status];
+      return b.frac - a.frac;
+    });
+    return list;
+  }
+
+  const api = { tokenize, stem, buildIndex, search, snippet, highlightHTML, expandQuery, ITEMS, COND, computeItem, computeAll, activeItems, parseDate, iso, addMonths, addDays, days, fmt, lastLog, currentKm, perDay };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  root.Q05 = api;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+(function(){
+'use strict';
+const E = window.Q05;
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtKm = n => Math.round(n).toLocaleString('ru-RU');
+const today = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); };
+
+/* ---------- состояние и хранение ---------- */
+const KEY = 'q05.state.v1';
+const defaults = () => ({ v: 1, updated: 0, delivery: '', deliveryKm: 0, odo: [], perMonth: '', heavy: {}, logs: [], check: {}, charges: [] });
+let S = defaults();
+let dbDoc = null, storeLabel = 'Данные хранятся только в этом браузере.';
+try { const j = localStorage.getItem(KEY); if (j) S = Object.assign(defaults(), JSON.parse(j)); } catch (e) {}
+
+let saveTimer = null;
+function save() {
+  S.updated = Date.now();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+    if (dbDoc) {
+      try { await dbDoc.set(JSON.parse(JSON.stringify(S))); setStore('Данные сохраняются в вашем аккаунте Claude и доступны на других устройствах.'); }
+      catch (e) { setStore('Не удалось сохранить в аккаунте, данные хранятся только в этом браузере.'); }
+    }
+  }, 500);
+}
+function setStore(t) { storeLabel = t; const el = $('#store'); if (el) el.textContent = t; }
+
+(async function initDb() {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) return;
+    const id = await user.id();
+    const ref = db.collection('data/users/' + id).doc('q05state');
+    let remote = null;
+    try {
+      const snap = await ref.get();
+      const ex = snap && (typeof snap.exists === 'function' ? snap.exists() : snap.exists);
+      if (snap && ex !== false) remote = typeof snap.data === 'function' ? snap.data() : (snap.data !== undefined ? snap.data : snap);
+    } catch (e) {}
+    dbDoc = ref;
+    if (remote && remote.v === 1 && (remote.updated || 0) > (S.updated || 0)) {
+      S = Object.assign(defaults(), remote);
+      try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+      renderAll();
+    } else if ((S.updated || 0) > 0) {
+      try { await ref.set(JSON.parse(JSON.stringify(S))); } catch (e) {}
+    }
+    setStore('Данные сохраняются в вашем аккаунте Claude и доступны на других устройствах.');
+  } catch (e) { /* остаёмся на браузерном хранилище */ }
+})();
+
+/* ---------- вкладки ---------- */
+const TABS = ['search', 'service', 'charges', 'winter', 'facts'];
+function route() {
+  let h = (location.hash || '#search').slice(1);
+  if (!TABS.includes(h)) h = 'search';
+  TABS.forEach(t => $('#tab-' + t).classList.toggle('on', t === h));
+  $$('#tabs a').forEach(a => { if (a.getAttribute('href') === '#' + h) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- поиск ---------- */
+let INDEX = null, PAGES = null, lastRes = null, shown = 0;
+const STARTS = [
+  ['Как заряжать автомобиль', 'порядок зарядки, лючок, ток', 'зарядка'],
+  ['Как открыть капот', 'и где заливается омывайка', 'капот'],
+  ['Давление в шинах', 'сколько накачивать', 'давление в шинах'],
+  ['Заменить дворники', 'сервисный режим щёток', 'дворники заменить'],
+  ['Что значит индикатор на панели', 'значки и предупреждения', 'индикатор неисправности'],
+  ['Как открыть заднюю дверь', 'электрическая задняя дверь', 'багажник'],
+  ['Кондиционер и обогрев', 'климат, режимы, подогрев', 'кондиционер'],
+  ['Парковка и камеры', 'радары, панорама, автопарковка', 'парковка'],
+];
+const CHIPS = ['окно', 'аккумулятор 12В', 'крышка зарядного порта', 'ключ', 'стояночный тормоз', 'ремень безопасности', 'детское кресло', 'круиз-контроль', 'приложение', 'сиденья', 'свет', 'омыватель'];
+
+$('#starts').innerHTML = STARTS.map(s => `<button class="start" type="button" data-q="${esc(s[2])}"><b>${esc(s[0])}</b><span>${esc(s[1])}</span></button>`).join('');
+$('#chipsWrap').innerHTML = CHIPS.map(c => `<button class="chip" type="button" data-q="${esc(c)}">${esc(c)}</button>`).join('');
+
+fetch('pages.json').then(r => r.json()).then(p => {
+  PAGES = p; INDEX = E.buildIndex(p);
+  $('#q').disabled = false; $('#go').disabled = false;
+  $('#status').textContent = 'Инструкция загружена, ' + p.length + ' страниц. Поиск работает без интернета и понимает разные слова: «аккумулятор», «зарядка», «ручник».';
+}).catch(() => { $('#status').textContent = 'Не удалось загрузить текст инструкции. Обновите страницу.'; });
+
+function titleOf(pg) {
+  let t = pg.t.split('\n')[0];
+  if (t.length > 80) { const cut = t.lastIndexOf(' ', 80); t = t.slice(0, cut > 40 ? cut : 80) + '…'; }
+  return t;
+}
+function runSearch(q) {
+  q = (q || '').trim();
+  if (!q || !INDEX) return;
+  $('#q').value = q;
+  const out = E.search(INDEX, q, 40);
+  lastRes = { q, out };
+  shown = 0;
+  $('#results').innerHTML = '';
+  $('#idle').hidden = true;
+  $('#chipsWrap').hidden = false;
+  $('#ai').hidden = true; $('#ai').innerHTML = '';
+  if (!out.results.length) {
+    $('#results').innerHTML = '<div class="empty">Ничего не нашлось. Попробуйте другое слово, например «батарея» вместо «аккумулятор», или спросите проще.</div>';
+    $('#aiwrap').hidden = true; $('#more').hidden = true; return;
+  }
+  $('#aiwrap').hidden = !sampleFn;
+  more();
+}
+function more() {
+  const { out } = lastRes;
+  const slice = out.results.slice(shown, shown + 6);
+  const html = slice.map(r => {
+    const pg = PAGES[r.idx];
+    const snip = E.snippet(pg.t.replace(/\n/g, ' '), out.hl, 300);
+    return `<article class="hit" data-i="${r.idx}"><header><span class="pg">стр. ${pg.p}</span><h3>${esc(titleOf(pg))}</h3></header>
+      <p class="snip">${E.highlightHTML(snip, out.hl, esc)}</p>
+      <details><summary>Открыть страницу инструкции</summary><div class="ptools"></div><div class="pimg"></div><div class="ptxt" hidden></div><div class="pnav"></div></details></article>`;
+  }).join('');
+  $('#results').insertAdjacentHTML('beforeend', html);
+  shown += slice.length;
+  $('#more').hidden = shown >= out.results.length;
+}
+function fillPage(card, idx, view) {
+  const pg = PAGES[idx];
+  card.dataset.cur = idx;
+  view = view || card.dataset.view || 'img';
+  card.dataset.view = view;
+  const ptxt = card.querySelector('.ptxt'), pimg = card.querySelector('.pimg');
+  ptxt.innerHTML = '<p class="muted small"><b>Страница ' + pg.p + '</b></p>' + pg.t.split('\n').map(p => '<p>' + E.highlightHTML(p, lastRes.out.hl, esc) + '</p>').join('');
+  const url = 'pr/' + Math.floor(pg.p / 2) + '.webp';
+  pimg.innerHTML = '<div class="pbox" role="img" aria-label="Страница ' + pg.p + ' инструкции" style="background-image:url(' + url + ');background-position:' + (pg.p % 2 ? '100%' : '0%') + ' 0"></div>';
+  const probe = new Image();
+  probe.onerror = () => { pimg.innerHTML = '<p class="pbad small">Картинка страницы не загрузилась, ниже текст.</p>'; ptxt.hidden = false; };
+  probe.src = url;
+  pimg.hidden = view !== 'img'; ptxt.hidden = view !== 'txt';
+  card.querySelector('.ptools').innerHTML =
+    `<button type="button" class="btn ghost small ${view === 'img' ? 'on' : ''}" data-view="img">Как в инструкции</button><button type="button" class="btn ghost small ${view === 'txt' ? 'on' : ''}" data-view="txt">Текст</button>`;
+  const prev = PAGES[idx - 1], next = PAGES[idx + 1];
+  card.querySelector('.pnav').innerHTML =
+    (prev ? `<button type="button" class="btn ghost small" data-go="${idx - 1}">← стр. ${prev.p}</button>` : '<span></span>') +
+    (next ? `<button type="button" class="btn ghost small" data-go="${idx + 1}">стр. ${next.p} →</button>` : '<span></span>');
+}
+$('#results').addEventListener('toggle', e => {
+  const d = e.target; if (d.tagName !== 'DETAILS' || !d.open) return;
+  const card = d.closest('.hit'); if (!card.dataset.cur) fillPage(card, +card.dataset.i);
+}, true);
+$('#results').addEventListener('click', e => {
+  const v = e.target.closest('[data-view]');
+  if (v) { const c = v.closest('.hit'); fillPage(c, +c.dataset.cur, v.dataset.view); return; }
+  const b = e.target.closest('[data-go]'); if (!b) return;
+  fillPage(b.closest('.hit'), +b.dataset.go);
+});
+$('#more').addEventListener('click', more);
+$('#sform').addEventListener('submit', e => { e.preventDefault(); runSearch($('#q').value); });
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-q]'); if (!b) return;
+  location.hash = '#search'; route(); runSearch(b.dataset.q);
+  window.scrollTo({ top: 0 });
+});
+
+/* ---------- объяснение простыми словами ---------- */
+let sampleFn = null, aiCtl = null;
+(async function () {
+  try { if (window.claude && window.claude.use) sampleFn = await window.claude.use('sample'); } catch (e) {}
+  if (sampleFn && lastRes) $('#aiwrap').hidden = false;
+})();
+function fmtAI(t) { return esc(t).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'); }
+$('#aibtn').addEventListener('click', async () => {
+  if (!sampleFn || !lastRes) return;
+  const top = lastRes.out.results.slice(0, 4);
+  const ctx = top.map(r => '[стр. ' + PAGES[r.idx].p + '] ' + PAGES[r.idx].t.slice(0, 2600)).join('\n\n');
+  const prompt =
+`Ты помощник владелицы электромобиля Changan Qiyuan Q05. Она не разбирается в автомобилях, электромобиль у неё первый.
+Ответь на вопрос простым русским языком, коротко, по шагам, только на основе выдержек из инструкции ниже.
+Правила:
+- Инструкция переведена машинным переводом, термины бывают странными («метр» означает приборную панель, «батарея питания» может быть тяговой батареей). Объясняй так, как это поймёт новичок.
+- Не выдумывай кнопки, пункты меню и значения. Если в выдержках нет ответа, так и скажи и посоветуй обратиться в авторизованный сервис или открыть нужные страницы.
+- В конце каждого шага или абзаца указывай страницу в скобках, например (стр. 26).
+- Если речь о высоком напряжении, тормозах, подушках безопасности, возгорании или аварийной ситуации, добавь одну строку про безопасность и сервис.
+- Пиши без таблиц, жирным выделяй только самое главное.
+
+Вопрос: ${lastRes.q}
+
+Выдержки из инструкции:
+${ctx}`;
+  const box = $('#ai'); box.hidden = false; box.textContent = 'Читаю инструкцию…';
+  $('#aibtn').disabled = true;
+  if (aiCtl) aiCtl.abort(); aiCtl = new AbortController();
+  try {
+    const res = await sampleFn(prompt, { onText: ({ text }) => { box.innerHTML = fmtAI(text); }, signal: aiCtl.signal, cache: false });
+    box.innerHTML = fmtAI(res.text) + '<small>Ответ составлен ИИ по тексту инструкции. Номера страниц указаны в скобках, проверьте по ним.</small>';
+  } catch (err) {
+    if (err && err.code === 'not_granted') { $('#aiwrap').hidden = true; }
+    else if (err && err.code === 'rate_limited') box.textContent = 'Слишком много запросов подряд, попробуйте через минуту.';
+    else if (!(err && err.name === 'AbortError')) box.textContent = 'Не получилось получить объяснение. Прочитайте найденные страницы ниже.';
+  } finally { $('#aibtn').disabled = false; }
+});
+
+/* ---------- обслуживание ---------- */
+function curKm() { return E.currentKm(S); }
+function statusLabel(s) { return s === 'over' ? 'Пора' : s === 'soon' ? 'Скоро' : 'В порядке'; }
+function ivText(iv) { return 'каждые ' + iv.m + ' мес. или ' + fmtKm(iv.km) + ' км'; }
+function remain(c) {
+  const parts = [];
+  if (c.dayLeft >= 0) parts.push(c.dayLeft > 90 ? 'около ' + Math.round(c.dayLeft / 30.4) + ' мес.' : c.dayLeft + ' дн.');
+  else parts.push('срок прошёл ' + (-c.dayLeft) + ' дн. назад');
+  if (c.kmLeft > 0) parts.push(fmtKm(c.kmLeft) + ' км'); else parts.push('по пробегу превышено на ' + fmtKm(-c.kmLeft) + ' км');
+  return parts.join(' · ');
+}
+function renderService() {
+  $('#delivery').value = S.delivery || '';
+  $('#deliveryKm').value = S.deliveryKm || '';
+  $('#perMonth').value = S.perMonth || '';
+  const km = curKm();
+  if (document.activeElement !== $('#odoIn')) $('#odoIn').value = km || '';
+  const lastOdo = (S.odo || []).reduce((a, b) => (!a || b.d > a.d ? b : a), null);
+  $('#odoInfo').textContent = lastOdo ? 'Обновлено ' + E.fmt(E.parseDate(lastOdo.d)) + '. Обновляйте пробег раз в неделю-две, так расчёт точнее.' : 'Введите показание одометра, когда получите автомобиль.';
+  const pd = E.perDay(S, today());
+  $('#pmInfo').textContent = pd.src === 'auto' ? 'По вашим записям выходит около ' + fmtKm(pd.v * 30.4) + ' км в месяц, это учитывается в прогнозе дат.' : (pd.src === 'manual' ? 'Это значение используется для прогноза дат.' : 'С этим значением приложение подскажет, когда примерно придёт срок по пробегу.');
+
+  const list = E.computeAll(S, today());
+  const ready = list.length && list[0].ready;
+  // сводка
+  if (!ready) {
+    $('#sum').innerHTML = '<p class="sum"><span class="pill idle">Нужна дата получения</span><span class="muted">Укажите дату и пробег ниже. Первая проверка нужна через 12 месяцев или 5 000 км, что наступит раньше.</span></p>';
+  } else {
+    const first = list[0];
+    const over = list.filter(c => c.status === 'over').length, soon = list.filter(c => c.status === 'soon').length;
+    const when = first.byKm ? 'примерно ' + E.fmt(first.nextDate) : 'до ' + E.fmt(first.dueDate);
+    $('#sum').innerHTML = `<div class="sum"><span class="pill ${first.status}">${statusLabel(first.status)}</span><span class="big">${esc(first.item.name)}</span></div>
+      <p class="muted" style="margin:8px 0 0">${first.status === 'over' ? 'Срок наступил. ' : ''}${when} или при пробеге ${fmtKm(first.dueKm)} км. Осталось: ${esc(remain(first))}.</p>
+      ${(over || soon) ? `<p class="small" style="margin:6px 0 0">${over ? 'Пора: ' + over + '. ' : ''}${soon ? 'Скоро: ' + soon + '.' : ''}</p>` : ''}`;
+  }
+  // список
+  $('#items').innerHTML = list.map(c => {
+    const it = c.item;
+    const head = `<div class="row"><h3>${esc(it.name)} <span class="muted small">(${it.method === 'R' ? 'замена' : 'осмотр'}${it.dealer ? ', в сервисе' : ''})</span></h3>${c.ready ? `<span class="pill ${c.status}">${statusLabel(c.status)}</span>` : '<span class="pill idle">Ждёт даты</span>'}</div>`;
+    if (!c.ready) return `<article class="item">${head}<div class="meta"><span>Интервал: ${ivText(c.iv)}</span><span>${esc(it.why)}</span></div></article>`;
+    const w = Math.min(100, Math.round(c.frac * 100));
+    const last = c.done ? 'Последний раз: <b>' + E.fmt(E.parseDate(c.done.d)) + ', ' + fmtKm(c.done.km) + ' км</b>' : 'Отсчёт идёт с момента получения';
+    const nxt = 'Следующий раз: <b>до ' + E.fmt(c.dueDate) + '</b> или <b>при ' + fmtKm(c.dueKm) + ' км</b>';
+    const proj = c.byKm ? `<span>По вашему пробегу срок наступит раньше, около <b>${E.fmt(c.nextDate)}</b>.</span>` : '';
+    return `<article class="item ${c.status}">${head}
+      <div class="meta"><span>Интервал: ${ivText(c.iv)}</span><span>${last}</span><span>${nxt}</span>${proj}<span>Осталось: ${esc(remain(c))}</span></div>
+      <div class="bar" role="img" aria-label="Использовано ${w}% интервала"><i style="width:${w}%"></i></div>
+      <details><summary>Зачем это нужно</summary><p class="small muted" style="margin:4px 0">${esc(it.why)}</p></details>
+      <div><button class="btn small" type="button" data-done="${it.id}">Отметить выполненным</button></div></article>`;
+  }).join('');
+  // тяжёлые условия
+  $('#heavy').innerHTML = Object.keys(E.COND).map(k => `<label for="h_${k}"><input type="checkbox" id="h_${k}" data-heavy="${k}" ${S.heavy && S.heavy[k] ? 'checked' : ''}><span>${esc(E.COND[k])}</span></label>`).join('');
+  // история
+  const logs = (S.logs || []).slice().sort((a, b) => (a.d < b.d ? 1 : -1));
+  const names = Object.fromEntries(E.ITEMS.map(i => [i.id, i.name]));
+  $('#logs').innerHTML = logs.length ? logs.map((l, i) => `<div class="log"><span><b>${esc(names[l.item] || l.item)}</b><br><span class="muted small">${E.fmt(E.parseDate(l.d))}, ${fmtKm(l.km)} км</span></span><button class="linkbtn" type="button" data-del="${esc(l.id)}">Удалить</button></div>`).join('') : '<p class="muted small" style="margin:0">Пока ничего не отмечено. После обслуживания нажмите «Отметить выполненным» у нужного пункта, и срок следующего пересчитается.</p>';
+}
+$('#delivery').addEventListener('change', e => { S.delivery = e.target.value; save(); renderService(); });
+$('#deliveryKm').addEventListener('change', e => { S.deliveryKm = Math.max(0, Math.round(+e.target.value || 0)); save(); renderService(); });
+$('#perMonth').addEventListener('change', e => { S.perMonth = e.target.value; save(); renderService(); });
+$('#odoSave').addEventListener('click', () => {
+  const v = Math.round(+$('#odoIn').value);
+  if (!(v >= 0) || $('#odoIn').value === '') return;
+  const d = E.iso(today());
+  S.odo = (S.odo || []).filter(o => o.d !== d);
+  S.odo.push({ d, km: v });
+  save(); renderService();
+});
+$('#heavy').addEventListener('change', e => { const k = e.target.dataset.heavy; if (!k) return; S.heavy = S.heavy || {}; S.heavy[k] = e.target.checked; save(); renderService(); });
+let modalItem = null;
+$('#items').addEventListener('click', e => {
+  const b = e.target.closest('[data-done]'); if (!b) return;
+  modalItem = b.dataset.done;
+  const it = E.ITEMS.find(i => i.id === modalItem);
+  $('#mItem').textContent = it.name;
+  $('#mDate').value = E.iso(today());
+  $('#mKm').value = curKm() || '';
+  $('#modal').hidden = false; $('#mKm').focus();
+});
+$('#mCancel').addEventListener('click', () => { $('#modal').hidden = true; });
+$('#mform').addEventListener('submit', e => {
+  e.preventDefault();
+  const km = Math.round(+$('#mKm').value), d = $('#mDate').value;
+  if (!d || !(km >= 0)) return;
+  S.logs = S.logs || [];
+  S.logs.push({ id: String(Date.now()), item: modalItem, d, km });
+  if (km > curKm()) { S.odo = (S.odo || []).filter(o => o.d !== d); S.odo.push({ d, km }); }
+  save(); $('#modal').hidden = true; renderService();
+});
+$('#logs').addEventListener('click', e => {
+  const b = e.target.closest('[data-del]'); if (!b) return;
+  S.logs = (S.logs || []).filter(l => l.id !== b.dataset.del); save(); renderService();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('#modal').hidden = true; $('#bmodal').hidden = true; } });
+
+const INSPECT = [
+  ['Система охлаждения', ['♢ Охлаждающая жидкость EV-системы', '♢ Охлаждающие магистрали и соединения']],
+  ['Кондиционер', ['♢ Уровень хладагента', '♢ Компрессор, конденсатор, испаритель', '♢ Ресивер-осушитель и трубопроводы', '♢ Салонный фильтр']],
+  ['Шасси и кузов', ['♢ Тормозная жидкость', '♢ Передние и задние тормозные диски и колодки', '♢ Тормозные магистрали', 'Шины и диски, крепление колёс и гайки', '♢ Крепёжные элементы', 'Петли и ограничители дверей', '♢ Уплотнители люка и дверей']],
+  ['Тяговая батарея', ['♢ Поверхность аккумуляторного блока', '♢ Крепёжные болты', '♢ Разъёмы']],
+  ['Электропривод', ['♢ Трансмиссионное масло редуктора', '♢ Разъём и болт заземления', '♢ Чистота поверхности и крепёж', '♢ Система охлаждения привода (утечки, шланги)', '♢ Стыки редуктора, сальник полуоси, пробки (утечка масла)']],
+  ['Высоковольтная система', ['♢ Крепёжные болты жгутов', '♢ Клеммы жгутов', '♢ Поверхность жгутов']],
+  ['Электрооборудование', ['♢ Проводка, соединения и световые приборы', 'Стеклоочистители и стеклоомыватели']],
+];
+$('#inspect').innerHTML = INSPECT.map(g => `<h3>${esc(g[0])}</h3><ul>${g[1].map(x => '<li>' + esc(x) + '</li>').join('')}</ul>`).join('');
+
+/* ---------- ICS-напоминания ---------- */
+function buildICS() {
+  const T = today();
+  const list = E.computeAll(S, T).filter(c => c.ready);
+  const z = n => String(n).padStart(2, '0');
+  const ymd = d => d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate());
+  const stamp = ymd(T) + 'T000000Z';
+  const esc2 = s => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  const fold = l => { const out = []; while (l.length > 70) { out.push(l.slice(0, 70)); l = ' ' + l.slice(70); } out.push(l); return out.join('\r\n'); };
+  const L = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Q05 helper//RU', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+  const alarm = (days, text) => ['BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + esc2(text), 'TRIGGER:-P' + days + 'D', 'END:VALARM'];
+  list.forEach(c => {
+    const d = c.nextDate < T ? T : c.nextDate;
+    const end = E.addDays(d, 1);
+    const title = 'Q05: ' + c.item.name + (c.item.method === 'R' ? ' (замена)' : ' (осмотр)');
+    const desc = 'Срок: до ' + E.fmt(c.dueDate) + ' или при пробеге ' + fmtKm(c.dueKm) + ' км, что наступит раньше. Эти работы выполняются в авторизованном сервисе.';
+    L.push('BEGIN:VEVENT', 'UID:' + c.item.id + '-' + ymd(d) + '@q05helper', 'DTSTAMP:' + stamp, 'DTSTART;VALUE=DATE:' + ymd(d), 'DTEND;VALUE=DATE:' + ymd(end), 'SUMMARY:' + esc2(title), 'DESCRIPTION:' + esc2(desc), ...alarm(14, title), 'END:VEVENT');
+  });
+  const first = new Date(T.getFullYear(), T.getMonth() + 1, 1);
+  L.push('BEGIN:VEVENT', 'UID:monthly-check@q05helper', 'DTSTAMP:' + stamp, 'DTSTART;VALUE=DATE:' + ymd(first), 'DTEND;VALUE=DATE:' + ymd(E.addDays(first, 1)), 'RRULE:FREQ=MONTHLY', 'SUMMARY:' + esc2('Q05: давление в шинах и пробег'), 'DESCRIPTION:' + esc2('Проверьте давление в холодных шинах (норма 280 кПа), износ протектора и запишите пробег на странице помощника.'), ...alarm(0, 'Q05: давление в шинах и пробег'), 'END:VEVENT');
+  L.push('END:VCALENDAR');
+  return { text: L.map(fold).join('\r\n') + '\r\n', n: list.length };
+}
+let downloadsFn = null;
+(async function () { try { if (window.claude && window.claude.use) downloadsFn = await window.claude.use('downloads'); } catch (e) {} })();
+$('#icsBtn').addEventListener('click', async () => {
+  const m = $('#icsMsg');
+  if (!S.delivery) { m.textContent = 'Сначала укажите дату получения автомобиля, тогда появятся сроки.'; return; }
+  const { text, n } = buildICS();
+  if (!downloadsFn) {
+    try {
+      const url = URL.createObjectURL(new Blob([text], { type: 'text/calendar' }));
+      const a = document.createElement('a'); a.href = url; a.download = 'q05-obsluzhivanie.ics';
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
+      m.textContent = 'Файл скачан: ' + n + ' событий и ежемесячное напоминание о шинах. Откройте его на телефоне.';
+    } catch (e) { m.textContent = 'Не получилось скачать. Нажмите «Скопировать текст календаря» и сохраните в файл .ics.'; }
+    return;
+  }
+  try { await downloadsFn.save({ filename: 'q05-obsluzhivanie.ics', data: new Blob([text], { type: 'text/calendar' }) }); m.textContent = 'Файл сохранён: ' + n + ' событий и ежемесячное напоминание о шинах.'; }
+  catch (e) { m.textContent = 'Сохранение отменено или не получилось. Попробуйте «Скопировать текст календаря».'; }
+});
+$('#icsCopy').addEventListener('click', async () => {
+  const m = $('#icsMsg');
+  if (!S.delivery) { m.textContent = 'Сначала укажите дату получения автомобиля.'; return; }
+  try { await navigator.clipboard.writeText(buildICS().text); m.textContent = 'Скопировано. Вставьте в заметку и сохраните как файл .ics.'; }
+  catch (e) { m.textContent = 'Копирование не разрешено в этом окне. Используйте кнопку «Скачать календарь».'; }
+});
+
+/* ---------- журнал зарядок ---------- */
+const CTYPE = { home: 'Дома', ac: 'Станция AC', dc: 'Быстрая' };
+function chargeStats() {
+  const rows = (S.charges || []).slice().sort((a, b) => a.km - b.km || (a.d < b.d ? -1 : 1));
+  rows.forEach((r, i) => {
+    r.cons = null;
+    if (i > 0) { const dist = r.km - rows[i - 1].km; if (dist >= 20 && r.kwh > 0) r.cons = r.kwh / dist * 100; }
+  });
+  let dist = 0, kwh = 0, cost = 0, costKm = 0, costKwh = 0, totalKwh = 0, totalCost = 0, hasCost = 0;
+  rows.forEach((r, i) => {
+    totalKwh += r.kwh; if (r.cost > 0) { totalCost += r.cost; hasCost++; }
+    if (i > 0) {
+      const dd = r.km - rows[i - 1].km;
+      if (dd > 0) { dist += dd; kwh += r.kwh; if (r.cost > 0) { cost += r.cost; costKm += dd; } }
+    }
+  });
+  return { rows, avg: dist >= 50 ? kwh / dist * 100 : null, dist, costPer100: costKm >= 50 && cost > 0 ? cost / costKm * 100 : null, totalKwh, totalCost, hasCost };
+}
+function renderCharges() {
+  const st = chargeStats();
+  const fmt1 = n => n.toLocaleString('ru-RU', { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+  if (!st.rows.length) {
+    $('#chSum').innerHTML = '<p class="muted" style="margin:0">Пока нет записей. Добавляйте каждую зарядку с пробегом, и здесь появится средний расход на 100 км и стоимость. Для сравнения, по паспорту (цикл CLTC) расход 11,3 кВт·ч/100 км для версии 405 и 11,7 для версии 506, в реальности зимой он выше.</p>';
+  } else {
+    $('#chSum').innerHTML = `<div class="grid2">
+      <div><div class="big-n">${st.avg ? fmt1(st.avg) : '—'}</div><div class="muted small">кВт·ч на 100 км${st.avg ? '' : ', нужно хотя бы 50 км между записями'}</div></div>
+      <div><div class="big-n">${st.costPer100 ? fmt1(st.costPer100) : '—'}</div><div class="muted small">стоимость 100 км${st.costPer100 ? '' : ', укажите стоимость зарядок'}</div></div></div>
+      <p class="muted small" style="margin:12px 0 0">Всего записано ${fmt1(st.totalKwh)} кВт·ч за ${st.rows.length} ${st.rows.length === 1 ? 'зарядку' : 'зарядок'}${st.hasCost ? ', потрачено ' + fmt1(st.totalCost) : ''}. Паспортный расход 11,3–11,7 кВт·ч/100 км (CLTC). Расход считается как добавленные кВт·ч, делённые на пробег с прошлой записи, и точен, если заряжаться каждый раз до одного уровня.</p>`;
+  }
+  const rows = st.rows.slice().reverse();
+  $('#chList').innerHTML = rows.length ? `<table class="t"><tr><th>Дата</th><th>Пробег, км</th><th>кВт·ч</th><th>Стоимость</th><th>Где</th><th>на 100 км</th><th></th></tr>${rows.map(r => `<tr><td>${E.fmt(E.parseDate(r.d))}</td><td>${fmtKm(r.km)}</td><td>${r.kwh.toLocaleString('ru-RU')}</td><td>${r.cost > 0 ? r.cost.toLocaleString('ru-RU') : ''}</td><td>${esc(CTYPE[r.type] || '')}${r.s1 !== '' && r.s1 != null ? '<br><span class="muted">' + r.s1 + '→' + (r.s2 === '' || r.s2 == null ? '?' : r.s2) + '%</span>' : ''}</td><td>${r.cons ? fmt1(r.cons) : ''}</td><td><button class="linkbtn" type="button" data-cdel="${esc(r.id)}">Удалить</button></td></tr>`).join('')}</table>` : '<p class="muted small" style="margin:0">Записей пока нет.</p>';
+  if (!$('#chDate').value) $('#chDate').value = E.iso(today());
+  if (!$('#chKm').value && curKm()) $('#chKm').value = curKm();
+}
+$('#chForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const d = $('#chDate').value, km = Math.round(+$('#chKm').value), kwh = +$('#chKwh').value;
+  if (!d || !(km >= 0) || !(kwh > 0)) return;
+  const cost = $('#chCost').value === '' ? 0 : +$('#chCost').value;
+  S.charges = S.charges || [];
+  S.charges.push({ id: String(Date.now()), d, km, kwh, cost, type: $('#chType').value, s1: $('#chS1').value, s2: $('#chS2').value });
+  if (km > curKm()) { S.odo = (S.odo || []).filter(o => o.d !== d); S.odo.push({ d, km }); }
+  save();
+  ['chKwh', 'chCost', 'chS1', 'chS2'].forEach(i => { $('#' + i).value = ''; });
+  $('#chKm').value = '';
+  renderCharges(); renderService();
+});
+$('#chList').addEventListener('click', e => {
+  const b = e.target.closest('[data-cdel]'); if (!b) return;
+  S.charges = (S.charges || []).filter(c => c.id !== b.dataset.cdel); save(); renderCharges();
+});
+
+/* ---------- зима ---------- */
+const WINTER = [
+  ['w_tires', 'Зимние шины стоят на всех четырёх колёсах. Всесезонные M+S слабее зимних (стр. 431–432).'],
+  ['w_press', 'Давление проверено на холодных шинах, норма 280 кПа (стр. 426).'],
+  ['w_wash', 'В бачке омывающая жидкость, которая не замерзает при ожидаемых морозах.'],
+  ['w_wipe', 'Щётки стеклоочистителя в порядке (стр. 417–418).'],
+  ['w_port', 'Знаете, что на улице в дождь и снег зарядку лучше избегать (стр. 224), а замёрзшую ручку двери нельзя тянуть с силой (стр. 442).'],
+  ['w_app', 'В приложении или на экране настроена плановая зарядка (стр. 225).'],
+  ['w_wash2', 'Знаете, что после поездок по солёным дорогам автомобиль нужно мыть (стр. 444).'],
+];
+function renderWinter() {
+  $('#wList').innerHTML = WINTER.map(it => `<label for="${it[0]}"><input type="checkbox" id="${it[0]}" data-c="${it[0]}" ${S.check && S.check[it[0]] ? 'checked' : ''}><span>${esc(it[1])}</span></label>`).join('');
+}
+$('#wList').addEventListener('change', e => { const k = e.target.dataset.c; if (!k) return; S.check = S.check || {}; S.check[k] = e.target.checked; save(); });
+
+/* ---------- резервная копия ---------- */
+$('#backupBtn').addEventListener('click', () => { $('#bText').value = JSON.stringify(S); $('#bMsg').textContent = ''; $('#bmodal').hidden = false; });
+$('#bClose').addEventListener('click', () => { $('#bmodal').hidden = true; });
+$('#bCopy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('#bText').value); $('#bMsg').textContent = 'Скопировано.'; }
+  catch (e) { $('#bText').select(); $('#bMsg').textContent = 'Выделите текст и скопируйте вручную.'; }
+});
+$('#bRestore').addEventListener('click', () => {
+  try {
+    const j = JSON.parse($('#bText').value);
+    if (!j || j.v !== 1) throw 0;
+    S = Object.assign(defaults(), j); save(); renderAll(); $('#bMsg').textContent = 'Данные восстановлены.';
+  } catch (e) { $('#bMsg').textContent = 'Не получилось прочитать текст. Вставьте копию целиком.'; }
+});
+
+function renderAll() { renderService(); renderCharges(); renderWinter(); $('#store').textContent = storeLabel; }
+renderAll(); route();
+})();
+</script>
+</body>
+</html>
